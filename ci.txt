@@ -1,0 +1,458 @@
+RPC
+
+client
+import xmlrpc.client
+
+client = xmlrpc.client.ServerProxy("http://localhost:8000")
+
+n = int(input("Enter num :"))
+result = client.fact(n)
+print(f"the factorial of number {n} is ", result)
+-------------------
+server
+from xmlrpc.server import SimpleXMLRPCServer
+
+def factorial(n):
+    if n == 0 or n== 1:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+
+server = SimpleXMLRPCServer(('localhost', 8000))
+print("Server is running on port 8000")
+server.register_function(factorial, 'fact')
+server.serve_forever()
+------------------------------------------------------------------------
+
+RMI
+
+client
+import Pyro4
+
+uri = input("Enter the URI of the StringConcatenator object: ")
+concatenator = Pyro4.Proxy(uri)
+
+str1 = input("Enter the first string:")
+str2 = input("Enter the second string:")
+
+result = concatenator.concatinate_string(str1, str2)
+print(f"The concatenated string is: {result}")
+
+
+
+server
+
+import Pyro4
+@Pyro4.expose
+class StringConcatenator:
+    def concatenate_strings(self, str1, str2):
+        return str1+str2
+
+daemon = Pyro4.Daemon()
+uri = daemon.register(StringConcatenator)
+
+print("Server is running. URI:", uri)
+
+daemon.requestLoop()
+------------------------------------------------------------------------------
+CHAR COUNT
+
+mapper.py
+import sys
+
+for line in sys.stdin:
+    linechar = [r for r in line.lower().strip() if r != ' ']
+
+for char in linechar:
+    print('%s\t%s' % (char, 1))
+
+
+reducer.py
+import sys
+
+current_char = None
+current_count = 0
+
+for line in sys.stdin:
+    line = line.strip()
+    char, count = line.split('\t', 1)
+
+    try:
+        count = int(count)
+    except ValueError:
+        continue
+
+    if current_char == char:
+        current_count += count
+    else:
+        if current_char:
+            print('%s\t%s'% (current_char, current_count))
+        current_count = count
+        current_char = char
+
+if current_char is not None:
+    print('%s\t%s' % (current_char, current_count))
+---------------------------------------------------------------------------------
+WORD COUNT
+
+mapper.py
+import sys
+
+for line in sys.stdin:
+    linechar = [r for r in line.lower() if r.isalpha() or r==' ']
+    words = ''.join(linechar).strip().split()
+    
+    for word in words:
+        print('%s\t%s' % (word, 1))
+
+        
+reducer.py
+from operator import itemgetter
+import sys
+
+current_word = None
+current_count = 0
+word = None
+
+for line in sys.stdin:
+    line = line.strip()
+    word, count = line.split('\t', 1)
+
+    try:
+        count = int(count)
+    except ValueError:
+        continue
+
+    if current_word == word:
+        current_count += count
+    else:
+        if current_word:
+            print('%s\t%s'% (current_word, current_count))
+        current_count = count
+        current_word = word
+
+if current_word == word:
+    print('%s\t%s' % (current_word, current_count))
+--------------------------------------------------------------------------
+UNION INTERSECTION
+
+import numpy as np
+ 
+# Function to perform Union operation on fuzzy sets
+def fuzzy_union(A, B):
+    return np.maximum(A, B)
+ 
+# Function to perform Intersection operation on fuzzy sets
+def fuzzy_intersection(A, B):
+    return np.minimum(A, B)
+ 
+# Function to perform Complement operation on a fuzzy set
+def fuzzy_complement(A):
+    return 1 - A
+ 
+# Function to perform Difference operation on fuzzy sets
+def fuzzy_difference(A, B):
+    return np.maximum(A, 1 - B)
+ 
+# Function to create fuzzy relation by Cartesian product of two fuzzy sets
+def cartesian_product(A, B):
+    return np.outer(A, B)
+ 
+# Function to perform Max-Min composition on two fuzzy relations
+def max_min_composition(R, S):
+    return np.max(np.minimum.outer(R, S), axis=1)
+ 
+# Example usage
+A = np.array([0.2, 0.4, 0.6, 0.8])  # Fuzzy set A
+B = np.array([0.3, 0.5, 0.7, 0.9])  # Fuzzy set B
+ 
+# Operations on fuzzy sets
+union_result = fuzzy_union(A, B)
+intersection_result = fuzzy_intersection(A, B)
+complement_A = fuzzy_complement(A)
+difference_result = fuzzy_difference(A, B)
+ 
+print("Union:", union_result)
+print()
+print("Intersection:", intersection_result)
+print()
+print("Complement of A:", complement_A)
+print()
+print("Difference:", difference_result)
+print()
+
+# Fuzzy relations
+R = np.array([0.2, 0.5, 0.4])  # Fuzzy relation R
+S = np.array([0.6, 0.3, 0.7])  # Fuzzy relation S
+ 
+# Cartesian product of fuzzy relations
+cartesian_result = cartesian_product(R, S)
+print("Cartesian product of R and S:")
+print(cartesian_result)
+print()
+
+# Max-Min composition of fuzzy relations
+composition_result = max_min_composition(R, S)
+print("Max-Min composition of R and S:")
+print(composition_result)
+
+----------------------------------------------------------------------------
+LOAD BALANCING
+
+import random
+
+class LoadBalancer:
+    def __init__(self, servers):
+        self.servers = servers
+        self.num_servers = len(servers)
+        self.round_robin_index = 0
+    def round_robin(self):
+        server = self.servers[self.round_robin_index]
+        self.round_robin_index = (self.round_robin_index + 1) % self.num_servers
+        return server
+
+    def random_selection(self):
+        return random.choice(self.servers)
+
+# Example usage:
+servers = ['Server1', 'Server2', 'Server3']
+lb_round_robin = LoadBalancer(servers)
+lb_random = LoadBalancer(servers)
+
+# Simulate requests coming from clients
+num_requests = 20
+print("Round Robin Load Balancing:")
+for i in range(num_requests):
+    server = lb_round_robin.round_robin()
+    print(f"Request {i+1} directed to {server}")
+
+print("\nRandom Load Balancing:")
+for i in range(num_requests):
+    server = lb_random.random_selection()
+    print(f"Request {i+1} directed to {server}")
+-----------------------------------------------------------------------------------
+ANT COLONY
+
+import numpy as np
+import random
+ 
+# Define the distance matrix (distances between cities)
+# Replace this with your distance matrix or generate one based on your problem
+# Example distance matrix (replace this with your actual data)
+distance_matrix = np.array([
+    [0, 10, 15, 20],
+    [10, 0, 35, 25],
+    [15, 35, 0, 30],
+    [20, 25, 30, 0]
+])
+ 
+# Parameters for Ant Colony Optimization
+num_ants = 10
+num_iterations = 50
+evaporation_rate = 0.5
+pheromone_constant = 1.0
+heuristic_constant = 1.0
+ 
+# Initialize pheromone matrix and visibility matrix
+num_cities = len(distance_matrix)
+pheromone = np.ones((num_cities, num_cities))  # Pheromone matrix
+visibility = 1 / distance_matrix  # Visibility matrix (inverse of distance)
+ 
+# ACO algorithm
+for iteration in range(num_iterations):
+    ant_routes = []
+    for ant in range(num_ants):
+        current_city = random.randint(0, num_cities - 1)
+        visited_cities = [current_city]
+        route = [current_city]
+        
+        while len(visited_cities) < num_cities:
+            probabilities = []
+            for city in range(num_cities):
+                if city not in visited_cities:
+                    pheromone_value = pheromone[current_city][city]
+                    visibility_value = visibility[current_city][city]
+                    probability = (pheromone_value ** pheromone_constant) * (visibility_value ** heuristic_constant)
+                    probabilities.append((city, probability))
+            
+            probabilities = sorted(probabilities, key=lambda x: x[1], reverse=True)
+            selected_city = probabilities[0][0]
+            route.append(selected_city)
+            visited_cities.append(selected_city)
+            current_city = selected_city
+        
+        ant_routes.append(route)
+    
+    # Update pheromone levels
+    delta_pheromone = np.zeros((num_cities, num_cities))
+    for ant, route in enumerate(ant_routes):
+        for i in range(len(route) - 1):
+            city_a = route[i]
+            city_b = route[i + 1]
+            delta_pheromone[city_a][city_b] += 1 / distance_matrix[city_a][city_b]
+            delta_pheromone[city_b][city_a] += 1 / distance_matrix[city_a][city_b]
+    
+    pheromone = (1 - evaporation_rate) * pheromone + delta_pheromone
+ 
+# Find the best route
+best_route_index = np.argmax([sum(distance_matrix[cities[i]][cities[(i + 1) % num_cities]] for i in range(num_cities)) for cities in ant_routes])
+best_route = ant_routes[best_route_index]
+shortest_distance = sum(distance_matrix[best_route[i]][best_route[(i + 1) % num_cities]] for i in range(num_cities))
+ 
+print("Best route:", best_route)
+print("Shortest distance:", shortest_distance)
+-----------------------------------------------------------------------------------------------
+
+#Aim:- Implementation of Clonal selection algorithm using Python.
+
+import random
+
+# Initialize the population with random antibodies
+def initialize_population(population_size, antibody_length):
+    population = []
+    
+    for _ in range(population_size):
+        antibody = [random.choice([0, 1]) for _ in range(antibody_length)]
+        population.append(antibody)
+    
+    return population
+
+# Calculate affinity of an antibody
+def calculate_affinity(antibody):
+    return sum(antibody)
+
+# Select the antibodies with highest affinity
+def select_best_antibodies(population, clone_size):
+    sorted_population = sorted(population, key=calculate_affinity, reverse=True)
+    return sorted_population[:clone_size]
+
+# Mutate the selected antibodies
+def mutate_antibodies(antibodies, mutation_rate):
+    for antibody in antibodies:
+        for i in range(len(antibody)):
+            if random.random() < mutation_rate:
+                antibody[i] = 1 - antibody[i]
+    
+    return antibodies
+
+# Perform clonal selection algorithm
+def clonal_selection_algorithm(population_size, antibody_length, clone_size, mutation_rate, generations):
+    population = initialize_population(population_size, antibody_length)
+    
+    for _ in range(generations):
+        best_antibodies = select_best_antibodies(population, clone_size)
+        mutated_antibodies = mutate_antibodies(best_antibodies, mutation_rate)
+        
+        population += mutated_antibodies
+    
+    return max(population, key=calculate_affinity)
+
+# Example usage
+population_size = 100
+antibody_length = 10
+clone_size = 10
+mutation_rate = 0.1
+generations = 100
+
+result = clonal_selection_algorithm(population_size, antibody_length, clone_size, mutation_rate, generations)
+print("Best Antibody:", result)
+-----------------------------------------------------------------------------------------------
+DEAP
+
+import random
+from deap import base, creator, tools, algorithms
+ 
+# Define the evaluation function (minimize a simple mathematical function)
+def eval_func(individual):
+    # Example evaluation function (minimize a quadratic function)
+    return sum(x ** 2 for x in individual),
+ 
+# DEAP setup
+creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+creator.create("Individual", list, fitness=creator.FitnessMin)
+ 
+toolbox = base.Toolbox()
+ 
+# Define attributes and individuals
+toolbox.register("attr_float", random.uniform, -5.0, 5.0)  # Example: Float values between -5 and 5
+toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_float, n=3)  # Example: 3-dimensional individual
+toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+ 
+# Evaluation function and genetic operators
+toolbox.register("evaluate", eval_func)
+toolbox.register("mate", tools.cxBlend, alpha=0.5)
+toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.2)
+toolbox.register("select", tools.selTournament, tournsize=3)
+ 
+# Create population
+population = toolbox.population(n=50)
+ 
+# Genetic Algorithm parameters
+generations = 20
+ 
+# Run the algorithm
+for gen in range(generations):
+    offspring = algorithms.varAnd(population, toolbox, cxpb=0.5, mutpb=0.1)
+    
+    fits = toolbox.map(toolbox.evaluate, offspring)
+    for fit, ind in zip(fits, offspring):
+        ind.fitness.values = fit
+    
+    population = toolbox.select(offspring, k=len(population))
+ 
+# Get the best individual after generations
+best_ind = tools.selBest(population, k=1)[0]
+best_fitness = best_ind.fitness.values[0]
+ 
+print("Best individual:", best_ind)
+print("Best fitness:", best_fitness)
+-----------------------------------------------------------------------------------------------
+AIPR
+
+import numpy as np
+ 
+# Generate dummy data for demonstration purposes (replace this with your actual data)
+def generate_dummy_data(samples=100, features=10):
+    data = np.random.rand(samples, features)
+    labels = np.random.randint(0, 2, size=samples)
+    return data, labels
+ 
+# Define the AIRS algorithm
+class AIRS:
+    def __init__(self, num_detectors=10, hypermutation_rate=0.1):
+        self.num_detectors = num_detectors
+        self.hypermutation_rate = hypermutation_rate
+ 
+    def train(self, X, y):
+        self.detectors = X[np.random.choice(len(X), self.num_detectors, replace=False)]
+ 
+    def predict(self, X):
+        predictions = []
+        for sample in X:
+            distances = np.linalg.norm(self.detectors - sample, axis=1)
+            prediction = int(np.argmin(distances))
+            predictions.append(prediction)
+        return predictions
+ 
+# Generate dummy data
+data, labels = generate_dummy_data()
+ 
+# Split data into training and testing sets
+split_ratio = 0.8
+split_index = int(split_ratio * len(data))
+train_data, test_data = data[:split_index], data[split_index:]
+train_labels, test_labels = labels[:split_index], labels[split_index:]
+ 
+# Initialize and train AIRS
+airs = AIRS(num_detectors=10, hypermutation_rate=0.1)
+airs.train(train_data, train_labels)
+ 
+# Test AIRS on the test set
+predictions = airs.predict(test_data)
+ 
+# Evaluate accuracy
+accuracy = np.mean(predictions == test_labels)
+print(f"Accuracy: {accuracy}")
+
+-----------------------------------------------------------------------------------------------
