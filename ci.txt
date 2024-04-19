@@ -161,8 +161,8 @@ def cartesian_product(A, B):
  
 # Function to perform Max-Min composition on two fuzzy relations
 def max_min_composition(R, S):
-    return np.max(np.minimum.outer(R, S), axis=1)
- 
+    return np.maximum(np.minimum.outer(R, S), np.minimum.outer(S, R))
+
 # Example usage
 A = np.array([0.2, 0.4, 0.6, 0.8])  # Fuzzy set A
 B = np.array([0.3, 0.5, 0.7, 0.9])  # Fuzzy set B
