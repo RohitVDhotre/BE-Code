@@ -368,12 +368,13 @@ class AIRS:
  
     def train(self, X, y):
         self.detectors = X[np.random.choice(len(X), self.num_detectors, replace=False)]
+        self.labels = y
  
     def predict(self, X):
         predictions = []
         for sample in X:
             distances = np.linalg.norm(self.detectors - sample, axis=1)
-            prediction = int(np.argmin(distances))
+            prediction = self.labels[np.argmin(distances)]
             predictions.append(prediction)
         return predictions
  
